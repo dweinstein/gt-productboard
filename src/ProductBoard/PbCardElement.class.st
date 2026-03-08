@@ -133,8 +133,8 @@ PbCardElement >> buildExcerpt [
 	(entity respondsTo: #descriptionText) ifFalse: [ ^ nil ].
 	text := entity descriptionText.
 	(text isNil or: [ text isEmpty ]) ifTrue: [ ^ nil ].
-	excerpt := text copyFrom: 1 to: (text size min: 800).
-	excerpt size >= 800 ifTrue: [ excerpt := excerpt, '...' ].
+	excerpt := text copyFrom: 1 to: (text size min: 1000).
+	excerpt size >= 1000 ifTrue: [ excerpt := excerpt, '...' ].
 	ropedText := excerpt asRopedText.
 	ropedText foreground: (Color fromHexString: '555555').
 	ropedText fontSize: 18.
