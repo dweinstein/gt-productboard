@@ -25,6 +25,26 @@ PbFeaturesGroup >> buildNowNextLaterElement [
 		groupClass: PbFeaturesGroup
 ]
 
+{ #category : 'gt - actions' }
+PbFeaturesGroup >> gtActionArchiveAllFor: anAction [
+	<gtAction>
+	self client ifNil: [ ^ anAction noAction ].
+	self items ifEmpty: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 5;
+		icon: BrGlamorousVectorIcons cancel;
+		tooltip: 'Archive all features';
+		action: [ :aButton |
+			| count |
+			count := 0.
+			self items do: [ :f |
+				f archived ~= true ifTrue: [
+					self client archiveFeature: f.
+					f archived: true.
+					count := count + 1 ] ].
+			aButton phlow spawnObject: ('Archived ', count asString, ' features') ]
+]
+
 { #category : 'views' }
 PbFeaturesGroup >> gtViewBoardFor: aView [
 	<gtView>
