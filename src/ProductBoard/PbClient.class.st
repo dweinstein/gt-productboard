@@ -332,16 +332,30 @@ PbClient >> gtReleaseGroupsFor: aView [
 		view: #gtViewReleaseGroupsFor:
 ]
 
-{ #category : 'views' }
+{ #category : 'gt - views' }
 PbClient >> gtReleaseRoadmapFor: aView [
 	<gtView>
+	| stateOrder |
+	stateOrder := #('completed' 'in-progress' 'upcoming').
 	^ aView columnedTree
 		title: 'Release roadmap';
 		priority: 4;
 		items: [ self releaseGroups items reject: [ :rg | rg archived = true ] ];
 		children: [ :item |
 			(item isKindOf: PbReleaseGroup)
-				ifTrue: [ self releasesByGroupId at: item id ifAbsent: [ #() ] ]
+				ifTrue: [ 
+					| releases |
+					releases := self releasesByGroupId at: item id ifAbsent: [ #() ].
+					releases sorted: [ :a :b |
+						| aIdx bIdx |
+						aIdx := stateOrder indexOf: (a state ifNil: [ '' ]) ifAbsent: [ 99 ].
+						bIdx := stateOrder indexOf: (b state ifNil: [ '' ]) ifAbsent: [ 99 ].
+						aIdx = bIdx
+							ifTrue: [ 
+								(a state = 'completed')
+									ifTrue: [ a name <= b name ]
+									ifFalse: [ a name >= b name ] ]
+							ifFalse: [ aIdx < bIdx ] ] ]
 				ifFalse: [
 					(item isKindOf: PbRelease)
 						ifTrue: [ self featuresByReleaseId at: item id ifAbsent: [ #() ] ]
@@ -568,13 +582,13 @@ PbClient >> releases: anObject [
 	releases := anObject
 ]
 
-{ #category : 'api - roadmap' }
+{ #category : 'accessing' }
 PbClient >> releasesByGroupId [
-	"Dictionary mapping groupId -> OrderedCollection of PbRelease.
-	Built from releases that have a releaseGroupId."
+	"Dictionary mapping groupId -> OrderedCollection of active (non-archived) PbRelease.
+	Built from activeReleases that have a releaseGroupId."
 	| result |
 	result := Dictionary new.
-	self releases items do: [ :rel |
+	self activeReleases do: [ :rel |
 		| groupId |
 		groupId := rel releaseGroupId.
 		groupId ifNotNil: [
