@@ -3,7 +3,7 @@
 
 ```st
 Metacello new
-	repository: '';
+	repository: 'github://dweinstein/gt-productboard/src';
 	baseline: 'Productboard';
 	load
 ```
