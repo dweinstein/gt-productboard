@@ -71,6 +71,29 @@ PbEntity >> from: aDictionary [
 				withArguments: {aDictionary at: aPair key ifAbsent: [ nil ]} ]
 ]
 
+{ #category : 'actions' }
+PbEntity >> gtActionViewRichTextFor: anAction [
+	<gtAction>
+	(self respondsTo: #description) ifFalse: [ ^ anAction noAction ].
+	(self description isNil or: [ self description isEmpty ]) ifTrue: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 3;
+		icon: BrGlamorousVectorIcons browse;
+		tooltip: 'View rich text description';
+		action: [ :aButton | 
+			| webView styledHtml |
+			styledHtml := '<html><head><style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: #333; padding: 16px; line-height: 1.6; }
+h1 { font-size: 20px; } h2 { font-size: 17px; } h3 { font-size: 15px; }
+a { color: #0066cc; }
+ul, ol { padding-left: 24px; }
+</style></head><body>', self description, '</body></html>'.
+			webView := GtWebViewElement new.
+			webView html: styledHtml.
+			webView matchParent.
+			aButton phlow spawnObject: webView ]
+]
+
 { #category : 'accessing' }
 PbEntity >> gtViewRawDataFor: aView [
 	<gtView>

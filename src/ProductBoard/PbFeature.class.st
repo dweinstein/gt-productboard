@@ -115,7 +115,7 @@ PbFeature >> gtActionOpenInBrowserFor: anAction [
 	self htmlUrl ifNil: [ ^ anAction noAction ].
 	^ anAction button
 		priority: 1;
-		icon: BrGlamorousVectorIcons browse;
+		icon: BrGlamorousVectorIcons web ;
 		tooltip: 'Open in ProductBoard';
 		action: [ WebBrowser openOn: self htmlUrl ]
 ]
@@ -137,16 +137,6 @@ PbFeature >> gtDescriptionFor: aView [
 		title: 'Description';
 		priority: 2;
 		text: [ self descriptionText ]
-]
-
-{ #category : 'views' }
-PbFeature >> gtDescriptionHtmlFor: aView [
-	<gtView>
-	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
-	^ aView explicit
-		title: 'Rich text';
-		priority: 9;
-		stencil: [ self descriptionHtmlElement ]
 ]
 
 { #category : 'printing' }

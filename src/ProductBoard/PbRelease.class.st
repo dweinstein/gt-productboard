@@ -168,16 +168,6 @@ PbRelease >> gtDescriptionFor: aView [
 		text: [ self descriptionText ]
 ]
 
-{ #category : 'views' }
-PbRelease >> gtDescriptionHtmlFor: aView [
-	<gtView>
-	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
-	^ aView explicit
-		title: 'Rich text';
-		priority: 9;
-		stencil: [ self descriptionHtmlElement ]
-]
-
 { #category : 'printing' }
 PbRelease >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed release' ])
