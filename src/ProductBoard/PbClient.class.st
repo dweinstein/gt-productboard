@@ -52,6 +52,15 @@ PbClient class >> withApiKeyFromFile [
 	^ self new apiKey: self apiKeyFileContents
 ]
 
+{ #category : 'accessing' }
+PbClient >> activeReleases [
+	"Releases that are not archived and whose release group is not archived"
+	| archivedGroupIds |
+	archivedGroupIds := (self releaseGroups items select: [ :rg | rg archived = true ]) collect: #id.
+	^ self releases items reject: [ :r | 
+		r archived = true or: [ archivedGroupIds includes: r releaseGroupId ] ]
+]
+
 { #category : 'as yet unclassified' }
 PbClient >> apiKey [
 	^ apiKey
@@ -204,174 +213,7 @@ PbClient >> getUrl: anAbsoluteUrl [
 ]
 
 { #category : 'views' }
-PbClient >> gtFeaturesBoardFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Feature board';
-		priority: 8;
-		object: [ self features ];
-		view: #gtViewBoardFor:
-]
-
-{ #category : 'accessing' }
-PbClient >> gtFeaturesFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Features';
-		priority: 1;
-		object: [ self features ];
-		view: #gtViewFeaturesFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtFeaturesNowNextLaterFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Features now/next/later';
-		priority: 11;
-		object: [ self features ];
-		view: #gtViewNowNextLaterFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtObjectivesBoardFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Objectives board';
-		priority: 9;
-		object: [ self objectives ];
-		view: #gtViewBoardFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtObjectivesByStateFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Objectives by state';
-		priority: 3;
-		object: [ self objectives ];
-		view: #gtViewByStateFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtObjectivesByTimeframeFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Objectives by timeframe';
-		priority: 4;
-		object: [ self objectives ];
-		view: #gtViewByTimeframeFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtObjectivesFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Objectives';
-		priority: 2;
-		object: [ self objectives ];
-		view: #gtViewObjectivesFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtObjectivesTimelineFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Objectives timeline';
-		priority: 10;
-		object: [ self objectives ];
-		view: #gtViewTimelineFor:
-]
-
-{ #category : 'views' }
-PbClient >> gtQuarterlyRadarFor: aView [
-	<gtView>
-	^ aView explicit
-		title: 'Release radar';
-		priority: 3;
-		stencil: [ self buildQuarterlyRadarElement ]
-]
-
-{ #category : 'gt views' }
-PbClient >> gtReleaseGroupsFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Release Groups';
-		priority: 13;
-		object: [ self releaseGroups ];
-		view: #gtViewReleaseGroupsFor:
-]
-
-{ #category : 'gt views' }
-PbClient >> gtReleaseRoadmapFor: aView [
-	<gtView>
-	^ aView columnedTree
-		title: 'Release roadmap';
-		priority: 4;
-		items: [ self releaseGroups items reject: [ :rg | rg archived = true ] ];
-		children: [ :item |
-			(item isKindOf: PbReleaseGroup)
-				ifTrue: [ self releasesByGroupId at: item id ifAbsent: [ #() ] ]
-				ifFalse: [
-					(item isKindOf: PbRelease)
-						ifTrue: [ self featuresByReleaseId at: item id ifAbsent: [ #() ] ]
-						ifFalse: [ #() ] ] ];
-		column: 'Name' text: [ :item | item name ] weight: 1;
-		column: 'Status' text: [ :item |
-			(item isKindOf: PbFeature)
-				ifTrue: [ item status ifNil: [ '' ] ifNotNil: [ :s | s name ifNil: [ '' ] ] ]
-				ifFalse: [
-					(item isKindOf: PbRelease)
-						ifTrue: [ item state ifNil: [ '' ] ]
-						ifFalse: [ '' ] ] ] weight: 0.25;
-		column: 'Owner' text: [ :item |
-			(item isKindOf: PbFeature)
-				ifTrue: [ item owner ifNil: [ '' ] ifNotNil: [ :o | o gtDisplayString ] ]
-				ifFalse: [ '' ] ] weight: 0.3;
-		column: 'Timeframe' text: [ :item |
-			| tf |
-			tf := (item respondsTo: #timeframe) ifTrue: [ item timeframe ] ifFalse: [ nil ].
-			tf ifNil: [ '' ] ifNotNil: [ tf gtDisplayString ] ] weight: 0.3
-]
-
-{ #category : 'gt views' }
-PbClient >> gtReleasesFor: aView [
-	<gtView>
-	^ aView forward
-		title: 'Releases';
-		priority: 12;
-		object: [ self releases ];
-		view: #gtViewReleasesFor:
-]
-
-{ #category : 'as yet unclassified' }
-PbClient >> gtSpotterForFeature: aSearch [
-	<gtSearch>
-	^ aSearch list
-		title: 'Features';
-		priority: 9;
-		items: [ self listFeatures ];
-		itemsLimit: Float infinity;
-		itemName: #name;
-		sendCategory: [ :aCategory :aStep :thisSearch | PbFeaturesGroup withAll: aCategory items contents ];
-		filterBySubstring
-]
-
-{ #category : 'as yet unclassified' }
-PbClient >> gtSpotterForObjective: aSearch [
-	<gtSearch>
-	^ aSearch list
-		title: 'Objectives';
-		priority: 9;
-		items: [ self listObjectives ];
-		itemsLimit: Float infinity;
-		itemName: #name;
-		sendCategory: [ :aCategory :aStep :thisSearch | PbObjectivesGroup withAll: aCategory items contents ];
-		filterBySubstring
-]
-
-{ #category : 'views' }
-PbClient >> gtViewByOwnerFor: aView [
+PbClient >> gtByOwnerFor: aView [
 	<gtView>
 	^ aView columnedTree
 		title: 'By owner';
@@ -407,12 +249,12 @@ PbClient >> gtViewByOwnerFor: aView [
 				ifFalse: [ each status gtDisplayString ] ] weight: 0.2;
 		send: [ :each |
 			(each isKindOf: Association)
-				ifTrue: [ 
+				ifTrue: [
 					| feats |
 					feats := each value select: [ :i | i isKindOf: PbFeature ].
 					feats size = each value size
 						ifTrue: [ PbFeaturesGroup withAll: feats ]
-						ifFalse: [ 
+						ifFalse: [
 							| objs |
 							objs := each value select: [ :i | i isKindOf: PbObjective ].
 							objs size = each value size
@@ -421,8 +263,37 @@ PbClient >> gtViewByOwnerFor: aView [
 				ifFalse: [ each ] ]
 ]
 
+{ #category : 'accessing' }
+PbClient >> gtFeaturesFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Features';
+		priority: 1;
+		object: [ self features ];
+		view: #gtViewFeaturesFor:
+]
+
 { #category : 'views' }
-PbClient >> gtViewRecentlyChangedFor: aView [
+PbClient >> gtObjectivesFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Objectives';
+		priority: 2;
+		object: [ self objectives ];
+		view: #gtViewObjectivesFor:
+]
+
+{ #category : 'views' }
+PbClient >> gtQuarterlyRadarFor: aView [
+	<gtView>
+	^ aView explicit
+		title: 'Release radar';
+		priority: 3;
+		stencil: [ self buildQuarterlyRadarElement ]
+]
+
+{ #category : 'views' }
+PbClient >> gtRecentlyChangedFor: aView [
 	<gtView>
 	^ aView columnedList
 		title: 'Recently changed';
@@ -452,7 +323,85 @@ PbClient >> gtViewRecentlyChangedFor: aView [
 ]
 
 { #category : 'views' }
-PbClient >> gtViewStuckItemsFor: aView [
+PbClient >> gtReleaseGroupsFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Release groups';
+		priority: 9;
+		object: [ self releaseGroups ];
+		view: #gtViewReleaseGroupsFor:
+]
+
+{ #category : 'views' }
+PbClient >> gtReleaseRoadmapFor: aView [
+	<gtView>
+	^ aView columnedTree
+		title: 'Release roadmap';
+		priority: 4;
+		items: [ self releaseGroups items reject: [ :rg | rg archived = true ] ];
+		children: [ :item |
+			(item isKindOf: PbReleaseGroup)
+				ifTrue: [ self releasesByGroupId at: item id ifAbsent: [ #() ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [ self featuresByReleaseId at: item id ifAbsent: [ #() ] ]
+						ifFalse: [ #() ] ] ];
+		column: 'Name' text: [ :item | item name ] weight: 1;
+		column: 'Status' text: [ :item |
+			(item isKindOf: PbFeature)
+				ifTrue: [ item status ifNil: [ '' ] ifNotNil: [ :s | s name ifNil: [ '' ] ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [ item state ifNil: [ '' ] ]
+						ifFalse: [ '' ] ] ] weight: 0.25;
+		column: 'Owner' text: [ :item |
+			((item respondsTo: #owner) and: [ item owner notNil ])
+				ifTrue: [ item owner gtDisplayString ]
+				ifFalse: [ '' ] ] weight: 0.3;
+		column: 'Timeframe' text: [ :item |
+			((item respondsTo: #timeframe) and: [ item timeframe notNil ])
+				ifTrue: [ item timeframe gtDisplayString ]
+				ifFalse: [ '' ] ] weight: 0.3
+]
+
+{ #category : 'views' }
+PbClient >> gtReleasesFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Releases';
+		priority: 8;
+		object: [ PbReleasesGroup withAll: self activeReleases ];
+		view: #gtViewReleasesFor:
+]
+
+{ #category : 'as yet unclassified' }
+PbClient >> gtSpotterForFeature: aSearch [
+	<gtSearch>
+	^ aSearch list
+		title: 'Features';
+		priority: 9;
+		items: [ self listFeatures ];
+		itemsLimit: Float infinity;
+		itemName: #name;
+		sendCategory: [ :aCategory :aStep :thisSearch | PbFeaturesGroup withAll: aCategory items contents ];
+		filterBySubstring
+]
+
+{ #category : 'as yet unclassified' }
+PbClient >> gtSpotterForObjective: aSearch [
+	<gtSearch>
+	^ aSearch list
+		title: 'Objectives';
+		priority: 9;
+		items: [ self listObjectives ];
+		itemsLimit: Float infinity;
+		itemName: #name;
+		sendCategory: [ :aCategory :aStep :thisSearch | PbObjectivesGroup withAll: aCategory items contents ];
+		filterBySubstring
+]
+
+{ #category : 'views' }
+PbClient >> gtStuckItemsFor: aView [
 	<gtView>
 	^ aView columnedList
 		title: 'Stuck items';
@@ -584,7 +533,7 @@ PbClient >> quarterlyReleaseRadar [
 	quarterEnd := (Date year: today year month: ((today monthIndex - 1) // 3 * 3 + 3) day: 1) daysInMonth.
 	quarterEnd := Date year: today year month: ((today monthIndex - 1) // 3 * 3 + 3) day: quarterEnd.
 	
-	all := self releases items.
+	all := self activeReleases.
 	
 	launched := all select: [ :r |
 		r state = 'completed' and: [

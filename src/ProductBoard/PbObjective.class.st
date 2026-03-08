@@ -137,6 +137,16 @@ PbObjective >> gtDescriptionFor: aView [
 		text: [ self descriptionText ]
 ]
 
+{ #category : 'views' }
+PbObjective >> gtDescriptionHtmlFor: aView [
+	<gtView>
+	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
+	^ aView explicit
+		title: 'Rich text';
+		priority: 9;
+		stencil: [ self descriptionHtmlElement ]
+]
+
 { #category : 'printing' }
 PbObjective >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed objective' ])

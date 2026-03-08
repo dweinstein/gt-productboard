@@ -5,9 +5,9 @@ Class {
 	#package : 'ProductBoard'
 }
 
-{ #category : 'as yet unclassified' }
+{ #category : 'accessing' }
 PbListFeaturesAPIClient >> request [
-	^ self client get: '/features'
+	^ self client get: '/features' withParams: { 'archived' -> 'false' }
 ]
 
 { #category : 'as yet unclassified' }

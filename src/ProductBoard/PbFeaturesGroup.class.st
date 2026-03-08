@@ -70,25 +70,35 @@ PbFeaturesGroup >> gtViewByOwnerFor: aView [
 				ifFalse: [ each ] ]
 ]
 
-{ #category : 'gt-extensions' }
+{ #category : 'views' }
 PbFeaturesGroup >> gtViewByStatusFor: aView [
 	<gtView>
-	self items ifEmpty: [ ^ aView empty ].
-	^ aView columnedList
+	^ aView columnedTree
 		title: 'By status';
-		priority: 5;
-		items: [ 
+		priority: 2;
+		items: [
 			| grouped result |
-			grouped := self items groupedBy: [ :each | each status gtDisplayString ].
+			grouped := self items groupedBy: [ :f | f status ifNil: [ 'No status' ] ifNotNil: [ :s | s name ifNil: [ 'No status' ] ] ].
 			result := OrderedCollection new.
 			grouped keysAndValuesDo: [ :statusName :items |
 				result add: (statusName -> items) ].
 			result sorted: [ :a :b | a value size > b value size ] ];
-		column: 'Status' text: [ :assoc | assoc key ] weight: 0.3;
-		column: 'Count' text: [ :assoc | assoc value size ] weight: 0.2;
-		column: 'Features' text: [ :assoc |
-			', ' join: (assoc value collect: #name) ] weight: 0.5;
-		send: [ :assoc | PbFeaturesGroup withAll: assoc value ]
+		children: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ each value ]
+				ifFalse: [ #() ] ];
+		column: 'Name' text: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ each key, ' (', each value size asString, ')' ]
+				ifFalse: [ each name ] ];
+		column: 'Owner' text: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ '' ]
+				ifFalse: [ each owner ifNil: [ '' ] ifNotNil: [ :o | o gtDisplayString ] ] ] weight: 0.3;
+		send: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ PbFeaturesGroup withAll: each value ]
+				ifFalse: [ each ] ]
 ]
 
 { #category : 'views' }
@@ -114,29 +124,6 @@ PbFeaturesGroup >> gtViewNowNextLaterFor: aView [
 		title: 'Now / Next / Later';
 		priority: 4;
 		stencil: [ self buildNowNextLaterElement ]
-]
-
-{ #category : 'as yet unclassified' }
-PbFeaturesGroup >> gtViewOwnersFor: aView [
-	"<gtView>"
-	^ aView columnedList
-		title: 'Owners';
-		priority: 1;
-		items: [ self items groupedBy: [:e | e owner email ] ];
-		column: 'ID' text: #id;
-		column: 'Name' text: #name;
-		column: 'Description'
-			text: #description
-			weight: 0.5;
-		column: 'Created at'
-			text: #createdAt
-			weight: 0.5;
-		column: 'Owner'
-			text: [ :elem | elem owner email ]
-			weight: 0.5;
-		column: 'Status'
-			text: [ :elem | elem status name ]
-			weight: 0.5
 ]
 
 { #category : 'board' }

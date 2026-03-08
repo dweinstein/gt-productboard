@@ -139,6 +139,16 @@ PbFeature >> gtDescriptionFor: aView [
 		text: [ self descriptionText ]
 ]
 
+{ #category : 'views' }
+PbFeature >> gtDescriptionHtmlFor: aView [
+	<gtView>
+	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
+	^ aView explicit
+		title: 'Rich text';
+		priority: 9;
+		stencil: [ self descriptionHtmlElement ]
+]
+
 { #category : 'printing' }
 PbFeature >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed feature' ])

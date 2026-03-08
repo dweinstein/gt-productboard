@@ -34,6 +34,22 @@ PbEntity >> client: anObject [
 	client := anObject
 ]
 
+{ #category : 'building' }
+PbEntity >> descriptionHtmlElement [
+	"Render HTML description in a native web view with clean styling"
+	| styledHtml webView |
+	styledHtml := '<html><head><style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: #333; padding: 16px; line-height: 1.6; }
+h1 { font-size: 20px; } h2 { font-size: 17px; } h3 { font-size: 15px; }
+a { color: #0066cc; }
+ul, ol { padding-left: 24px; }
+</style></head><body>', self description, '</body></html>'.
+	webView := GtWebViewElement new.
+	webView html: styledHtml.
+	webView matchParent.
+	^ webView
+]
+
 { #category : 'serialization' }
 PbEntity >> deserializeTime: anObject [
 	anObject ifNil: [ ^ nil ].

@@ -133,11 +133,11 @@ PbCardElement >> buildExcerpt [
 	(entity respondsTo: #descriptionText) ifFalse: [ ^ nil ].
 	text := entity descriptionText.
 	(text isNil or: [ text isEmpty ]) ifTrue: [ ^ nil ].
-	excerpt := text copyFrom: 1 to: (text size min: 500).
-	excerpt size >= 500 ifTrue: [ excerpt := excerpt, '...' ].
+	excerpt := text copyFrom: 1 to: (text size min: 1000).
+	excerpt size >= 1000 ifTrue: [ excerpt := excerpt, '...' ].
 	ropedText := excerpt asRopedText.
 	ropedText foreground: (Color fromHexString: '555555').
-	ropedText fontSize: 13.
+	ropedText fontSize: 20.
 	label := BrEditor new
 		text: ropedText;
 		aptitude: BrGlamorousRegularEditorAptitude new;
@@ -151,7 +151,7 @@ PbCardElement >> buildExcerpt [
 { #category : 'building' }
 PbCardElement >> buildName [
 	| text fontSize topMargin |
-	fontSize := self isCompact ifTrue: [ 13 ] ifFalse: [ 15 ].
+	fontSize := self isCompact ifTrue: [ 13 ] ifFalse: [ 24 ].
 	topMargin := self isCompact ifTrue: [ 2 ] ifFalse: [ 8 ].
 	text := (entity name ifNil: [ 'Untitled' ]) asRopedText.
 	text fontSize: fontSize.
@@ -226,7 +226,7 @@ PbCardElement >> buildTypeLabel [
 	typeName ifNil: [ ^ nil ].
 	^ BrLabel new
 		text: (typeName asRopedText foreground: (Color fromHexString: 'aaaaaa'));
-		aptitude: (BrGlamorousLabelAptitude new fontSize: 10);
+		aptitude: (BrGlamorousLabelAptitude new fontSize: 14);
 		margin: (BlInsets left: 8)
 ]
 

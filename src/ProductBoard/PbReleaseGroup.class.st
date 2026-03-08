@@ -86,6 +86,57 @@ PbReleaseGroup >> detailItems [
 	^ items
 ]
 
+{ #category : 'accessing' }
+PbReleaseGroup >> featuresGroup [
+	"Wrap assigned features in a PbFeaturesGroup for view reuse"
+	self client ifNil: [ ^ PbFeaturesGroup new ].
+	^ PbFeaturesGroup withAll: self assignedFeatures
+]
+
+{ #category : 'actions' }
+PbReleaseGroup >> gtActionOpenInBrowserFor: anAction [
+	<gtAction>
+	self htmlUrl ifNil: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 1;
+		icon: BrGlamorousVectorIcons browse;
+		tooltip: 'Open in ProductBoard';
+		action: [ WebBrowser openOn: self htmlUrl ]
+]
+
+{ #category : 'views' }
+PbReleaseGroup >> gtBoardFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'Board';
+		priority: 7;
+		object: [ self featuresGroup ];
+		view: #gtViewBoardFor:
+]
+
+{ #category : 'views' }
+PbReleaseGroup >> gtByOwnerFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'By owner';
+		priority: 5;
+		object: [ self featuresGroup ];
+		view: #gtViewByOwnerFor:
+]
+
+{ #category : 'views' }
+PbReleaseGroup >> gtByStatusFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'By status';
+		priority: 6;
+		object: [ self featuresGroup ];
+		view: #gtViewByStatusFor:
+]
+
 { #category : 'gt views' }
 PbReleaseGroup >> gtDescriptionFor: aView [
 	<gtView>
@@ -101,18 +152,29 @@ PbReleaseGroup >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed release group' ])
 ]
 
-{ #category : 'gt views' }
+{ #category : 'views' }
 PbReleaseGroup >> gtFeaturesFor: aView [
 	<gtView>
 	self client ifNil: [ ^ aView empty ].
 	^ aView forward
 		title: 'Features';
-		priority: 16;
+		priority: 4;
 		object: [ PbFeaturesGroup withAll: self assignedFeatures ];
 		view: #gtViewFeaturesFor:
 ]
 
-{ #category : 'gt views' }
+{ #category : 'views' }
+PbReleaseGroup >> gtNowNextLaterFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'Now / Next / Later';
+		priority: 8;
+		object: [ self featuresGroup ];
+		view: #gtViewNowNextLaterFor:
+]
+
+{ #category : 'views' }
 PbReleaseGroup >> gtReleaseGroupFor: aView [
 	<gtView>
 	^ aView columnedList
@@ -120,18 +182,26 @@ PbReleaseGroup >> gtReleaseGroupFor: aView [
 		priority: 1;
 		items: [ self detailItems ];
 		column: 'Property' text: #first weight: 0.3;
-		column: 'Value' text: #second weight: 0.7
+		column: 'Value' text: #second weight: 0.7;
+		send: #last
 ]
 
-{ #category : 'gt views' }
+{ #category : 'views' }
 PbReleaseGroup >> gtReleasesFor: aView [
 	<gtView>
 	self client ifNil: [ ^ aView empty ].
 	^ aView forward
 		title: 'Releases';
-		priority: 15;
+		priority: 3;
 		object: [ PbReleasesGroup withAll: self assignedReleases ];
 		view: #gtViewReleasesFor:
+]
+
+{ #category : 'accessing' }
+PbReleaseGroup >> htmlUrl [
+	"URL to open this release group in ProductBoard"
+	links ifNil: [ ^ nil ].
+	^ links at: 'html' ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }

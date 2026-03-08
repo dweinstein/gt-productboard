@@ -98,12 +98,33 @@ PbRelease >> featuresGroup [
 	^ PbFeaturesGroup withAll: self assignedFeatures
 ]
 
+{ #category : 'actions' }
+PbRelease >> gtActionInspectFeaturesGroupFor: anAction [
+	<gtAction>
+	^ anAction button
+		priority: 2;
+		icon: BrGlamorousVectorIcons inspect;
+		tooltip: 'Inspect features group';
+		action: [ :aButton | aButton phlow spawnObject: self featuresGroup ]
+]
+
+{ #category : 'actions' }
+PbRelease >> gtActionOpenInBrowserFor: anAction [
+	<gtAction>
+	self htmlUrl ifNil: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 1;
+		icon: BrGlamorousVectorIcons browse;
+		tooltip: 'Open in ProductBoard';
+		action: [ WebBrowser openOn: self htmlUrl ]
+]
+
 { #category : 'views' }
 PbRelease >> gtBoardFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'Board';
-		priority: 5;
+		priority: 6;
 		object: [ self featuresGroup ];
 		view: #gtViewBoardFor:
 ]
@@ -113,7 +134,7 @@ PbRelease >> gtByOwnerFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'By owner';
-		priority: 3;
+		priority: 4;
 		object: [ self featuresGroup ];
 		view: #gtViewByOwnerFor:
 ]
@@ -123,7 +144,7 @@ PbRelease >> gtByStatusFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'By status';
-		priority: 4;
+		priority: 5;
 		object: [ self featuresGroup ];
 		view: #gtViewByStatusFor:
 ]
@@ -137,7 +158,7 @@ PbRelease >> gtCardFor: aView [
 		stencil: [ self buildCardElement ]
 ]
 
-{ #category : 'gt views' }
+{ #category : 'views' }
 PbRelease >> gtDescriptionFor: aView [
 	<gtView>
 	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
@@ -145,6 +166,16 @@ PbRelease >> gtDescriptionFor: aView [
 		title: 'Description';
 		priority: 2;
 		text: [ self descriptionText ]
+]
+
+{ #category : 'views' }
+PbRelease >> gtDescriptionHtmlFor: aView [
+	<gtView>
+	(description isNil or: [ description isEmpty ]) ifTrue: [ ^ aView empty ].
+	^ aView explicit
+		title: 'Rich text';
+		priority: 9;
+		stencil: [ self descriptionHtmlElement ]
 ]
 
 { #category : 'printing' }
@@ -157,7 +188,7 @@ PbRelease >> gtFeaturesFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'Features';
-		priority: 2;
+		priority: 3;
 		object: [ self featuresGroup ];
 		view: #gtViewFeaturesFor:
 ]
@@ -167,7 +198,7 @@ PbRelease >> gtNowNextLaterFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'Now / Next / Later';
-		priority: 6;
+		priority: 7;
 		object: [ self featuresGroup ];
 		view: #gtViewNowNextLaterFor:
 ]
@@ -182,6 +213,13 @@ PbRelease >> gtReleaseFor: aView [
 		column: 'Property' text: #first weight: 0.3;
 		column: 'Value' text: #second weight: 0.7;
 		send: #last
+]
+
+{ #category : 'accessing' }
+PbRelease >> htmlUrl [
+	"URL to open this release in ProductBoard"
+	links ifNil: [ ^ nil ].
+	^ links at: 'html' ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }
