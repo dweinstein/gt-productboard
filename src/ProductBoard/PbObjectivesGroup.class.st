@@ -168,7 +168,7 @@ PbObjectivesGroup >> gtViewObjectivesFor: aView [
 	^ aView columnedList
 		title: 'Objectives';
 		priority: 1;
-		items: [ self items sorted: [ :a :b |
+		items: [ (self items reject: [ :each | each archived = true ]) sorted: [ :a :b |
 			(a updatedAt ifNil: [ DateAndTime epoch ]) > (b updatedAt ifNil: [ DateAndTime epoch ]) ] ];
 		column: 'Name' text: #name;
 		column: 'State' text: [ :item | item state ifNil: [ 'unset' ] ] weight: 0.2;
