@@ -107,13 +107,27 @@ PbObjective >> detailItems [
 	^ items
 ]
 
+{ #category : 'gt - actions' }
+PbObjective >> gtActionArchiveFor: anAction [
+	<gtAction>
+	self archived = true ifTrue: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 5;
+		icon: BrGlamorousVectorIcons cancel;
+		tooltip: 'Archive this objective';
+		action: [ :aButton |
+			self client archiveObjective: self.
+			self archived: true.
+			aButton phlow spawnObject: ('Archived: ', self name) ]
+]
+
 { #category : 'views' }
 PbObjective >> gtActionOpenInBrowserFor: anAction [
 	<gtAction>
 	self htmlUrl ifNil: [ ^ anAction noAction ].
 	^ anAction button
 		priority: 1;
-		icon: BrGlamorousVectorIcons browse;
+		icon: BrGlamorousVectorIcons web;
 		tooltip: 'Open in ProductBoard';
 		action: [ WebBrowser openOn: self htmlUrl ]
 ]

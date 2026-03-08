@@ -71,6 +71,16 @@ PbClient >> apiKey: anApiKey [
 	apiKey := anApiKey
 ]
 
+{ #category : 'api' }
+PbClient >> archiveFeature: aFeature [
+	^ self patch: '/features/', aFeature id body: { 'data' -> { 'archived' -> true } asDictionary } asDictionary
+]
+
+{ #category : 'api' }
+PbClient >> archiveObjective: anObjective [
+	^ self patch: '/objectives/', anObjective id body: { 'data' -> { 'archived' -> true } asDictionary } asDictionary
+]
+
 { #category : 'accessing' }
 PbClient >> baseUrl [
 	^ baseUrl
@@ -263,14 +273,17 @@ PbClient >> gtByOwnerFor: aView [
 				ifFalse: [ each ] ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'gt - views' }
 PbClient >> gtFeaturesFor: aView [
 	<gtView>
 	^ aView forward
 		title: 'Features';
 		priority: 1;
 		object: [ self features ];
-		view: #gtViewFeaturesFor:
+		view: #gtViewFeaturesFor:;
+		actionButtonIcon: BrGlamorousVectorIcons inspect
+			tooltip: 'Inspect features group'
+			action: [ :aButton | aButton phlow spawnObject: self features ]
 ]
 
 { #category : 'views' }
@@ -511,6 +524,15 @@ PbClient >> objectives [
 { #category : 'accessing' }
 PbClient >> objectives: anObject [
 	objectives := anObject
+]
+
+{ #category : 'api' }
+PbClient >> patch: aUrl body: aDictionary [
+	| aClient |
+	aClient := self initializeClient.
+	aClient url: self baseUrl / aUrl.
+	aClient entity: (ZnEntity json: (NeoJSONWriter toString: aDictionary)).
+	^ self checkForErrors: aClient patch
 ]
 
 { #category : 'accessing' }

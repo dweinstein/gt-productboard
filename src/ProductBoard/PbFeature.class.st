@@ -109,6 +109,20 @@ PbFeature >> detailItems [
 	^ items
 ]
 
+{ #category : 'gt - actions' }
+PbFeature >> gtActionArchiveFor: anAction [
+	<gtAction>
+	self archived = true ifTrue: [ ^ anAction noAction ].
+	^ anAction button
+		priority: 5;
+		icon: BrGlamorousVectorIcons cancel;
+		tooltip: 'Archive this feature';
+		action: [ :aButton |
+			self client archiveFeature: self.
+			self archived: true.
+			aButton phlow spawnObject: ('Archived: ', self name) ]
+]
+
 { #category : 'views' }
 PbFeature >> gtActionOpenInBrowserFor: anAction [
 	<gtAction>
