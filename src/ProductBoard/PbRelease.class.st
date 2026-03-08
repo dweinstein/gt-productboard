@@ -37,6 +37,15 @@ PbRelease >> archived: anObject [
 	archived := anObject
 ]
 
+{ #category : 'accessing' }
+PbRelease >> assignedFeatures [
+	"Look up features assigned to this release through the client's assignment data."
+	| theClient |
+	theClient := self client.
+	theClient ifNil: [ ^ #() ].
+	^ theClient featuresByReleaseId at: self id ifAbsent: [ #() ]
+]
+
 { #category : 'ui' }
 PbRelease >> buildCardElement [
 	^ PbCardElement for: self
@@ -104,6 +113,17 @@ PbRelease >> gtDescriptionFor: aView [
 { #category : 'printing' }
 PbRelease >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed release' ])
+]
+
+{ #category : 'gt views' }
+PbRelease >> gtFeaturesFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'Features';
+		priority: 15;
+		object: [ PbFeaturesGroup withAll: self assignedFeatures ];
+		view: #gtViewFeaturesFor:
 ]
 
 { #category : 'gt views' }

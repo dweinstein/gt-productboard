@@ -140,9 +140,17 @@ ProductboardMockExamples >> mockClient [
 	client features: self featuresGroup.
 	client objectives: self objectivesGroup.
 	client releases: self releasesGroup.
+	client releaseGroups: self releaseGroupsGroup.
+	client featureReleaseAssignments: self sampleFeatureReleaseAssignmentData.
+	"Propagate client to groups so entity navigation works"
+	client features client: client.
+	client releases client: client.
+	client releaseGroups client: client.
 	self assert: client features size equals: 4.
 	self assert: client objectives size equals: 4.
 	self assert: client releases size equals: 4.
+	self assert: client releaseGroups size equals: 2.
+	self assert: client featureReleaseAssignments size equals: 3.
 	^ client
 ]
 
@@ -340,6 +348,41 @@ ProductboardMockExamples >> releaseGroupsGroup [
 	^ group
 ]
 
+{ #category : 'examples' }
+ProductboardMockExamples >> releaseRoadmap [
+	<gtExample>
+	"Tests release roadmap mappings: releasesByGroupId and featuresByReleaseId"
+	| client releasesByGroup featuresByRelease rg1Releases rg2Releases rel1Features rel2Features rg1 rg1Features |
+	client := self mockClient.
+	
+	"Test releasesByGroupId"
+	releasesByGroup := client releasesByGroupId.
+	rg1Releases := releasesByGroup at: 'rg-1' ifAbsent: [ #() ].
+	rg2Releases := releasesByGroup at: 'rg-2' ifAbsent: [ #() ].
+	self assert: rg1Releases size equals: 2.
+	self assert: rg2Releases size equals: 2.
+	
+	"Test featuresByReleaseId"
+	featuresByRelease := client featuresByReleaseId.
+	rel1Features := featuresByRelease at: 'rel-1' ifAbsent: [ #() ].
+	rel2Features := featuresByRelease at: 'rel-2' ifAbsent: [ #() ].
+	self assert: rel1Features size equals: 2.
+	self assert: rel2Features size equals: 1.
+	
+	"Verify correct features mapped to rel-1"
+	self assert: (rel1Features collect: [ :f | f id ]) asSet equals: #('f1' 'f4') asSet.
+	
+	"Verify correct feature mapped to rel-2"
+	self assert: rel2Features first id equals: 'f2'.
+	
+	"Test featuresForReleaseGroup:"
+	rg1 := client releaseGroups items first.
+	rg1Features := client featuresForReleaseGroup: rg1.
+	self assert: rg1Features size equals: 3.
+	
+	^ client
+]
+
 { #category : 'examples - releases' }
 ProductboardMockExamples >> releasesByState [
 	<gtExample>
@@ -421,6 +464,27 @@ ProductboardMockExamples >> sampleFeatureData [
 			at: 'createdAt' put: '2025-02-01T00:00:00Z';
 			at: 'updatedAt' put: '2025-02-15T00:00:00Z';
 			at: 'lastHealthUpdate' put: nil;
+			yourself
+	}
+]
+
+{ #category : 'sample data' }
+ProductboardMockExamples >> sampleFeatureReleaseAssignmentData [
+	"Raw feature-release assignment dictionaries.
+	Maps: f1 -> rel-1 (Platform v2.0), f2 -> rel-2 (Mobile App Launch), f4 -> rel-1 (Platform v2.0).
+	This gives rel-1 two features, rel-2 one feature."
+	^ OrderedCollection withAll: {
+		Dictionary new
+			at: 'feature' put: (Dictionary new at: 'id' put: 'f1'; yourself);
+			at: 'release' put: (Dictionary new at: 'id' put: 'rel-1'; yourself);
+			yourself.
+		Dictionary new
+			at: 'feature' put: (Dictionary new at: 'id' put: 'f2'; yourself);
+			at: 'release' put: (Dictionary new at: 'id' put: 'rel-2'; yourself);
+			yourself.
+		Dictionary new
+			at: 'feature' put: (Dictionary new at: 'id' put: 'f4'; yourself);
+			at: 'release' put: (Dictionary new at: 'id' put: 'rel-1'; yourself);
 			yourself
 	}
 ]

@@ -32,6 +32,24 @@ PbReleaseGroup >> archived: anObject [
 ]
 
 { #category : 'accessing' }
+PbReleaseGroup >> assignedFeatures [
+	"All features across all releases in this group."
+	| theClient |
+	theClient := self client.
+	theClient ifNil: [ ^ #() ].
+	^ theClient featuresForReleaseGroup: self
+]
+
+{ #category : 'accessing' }
+PbReleaseGroup >> assignedReleases [
+	"Releases that belong to this group, looked up through the client."
+	| theClient |
+	theClient := self client.
+	theClient ifNil: [ ^ #() ].
+	^ theClient releasesByGroupId at: self id ifAbsent: [ #() ]
+]
+
+{ #category : 'accessing' }
 PbReleaseGroup >> description [
 	^ description
 ]
@@ -84,6 +102,17 @@ PbReleaseGroup >> gtDisplayOn: stream [
 ]
 
 { #category : 'gt views' }
+PbReleaseGroup >> gtFeaturesFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'Features';
+		priority: 16;
+		object: [ PbFeaturesGroup withAll: self assignedFeatures ];
+		view: #gtViewFeaturesFor:
+]
+
+{ #category : 'gt views' }
 PbReleaseGroup >> gtReleaseGroupFor: aView [
 	<gtView>
 	^ aView columnedList
@@ -92,6 +121,17 @@ PbReleaseGroup >> gtReleaseGroupFor: aView [
 		items: [ self detailItems ];
 		column: 'Property' text: #first weight: 0.3;
 		column: 'Value' text: #second weight: 0.7
+]
+
+{ #category : 'gt views' }
+PbReleaseGroup >> gtReleasesFor: aView [
+	<gtView>
+	self client ifNil: [ ^ aView empty ].
+	^ aView forward
+		title: 'Releases';
+		priority: 15;
+		object: [ PbReleasesGroup withAll: self assignedReleases ];
+		view: #gtViewReleasesFor:
 ]
 
 { #category : 'accessing' }

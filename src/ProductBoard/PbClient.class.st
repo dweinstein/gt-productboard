@@ -7,7 +7,8 @@ Class {
 		'features',
 		'objectives',
 		'releases',
-		'releaseGroups'
+		'releaseGroups',
+		'featureReleaseAssignments'
 	],
 	#classVars : [
 		'ApiKeyFile'
@@ -122,6 +123,17 @@ PbClient >> delete: aUrl [
 ]
 
 { #category : 'accessing' }
+PbClient >> featureReleaseAssignments [
+	^ featureReleaseAssignments ifNil: [ 
+		featureReleaseAssignments := self listFeatureReleaseAssignments ]
+]
+
+{ #category : 'accessing' }
+PbClient >> featureReleaseAssignments: anObject [
+	featureReleaseAssignments := anObject
+]
+
+{ #category : 'accessing' }
 PbClient >> features [
 	^ features ifNil: [ features := self listFeatures ]
 ]
@@ -129,6 +141,39 @@ PbClient >> features [
 { #category : 'accessing' }
 PbClient >> features: anObject [
 	features := anObject
+]
+
+{ #category : 'api - roadmap' }
+PbClient >> featuresByReleaseId [
+	"Dictionary mapping releaseId -> OrderedCollection of PbFeature.
+	Built from feature-release assignments joined with features."
+	| result featuresById |
+	result := Dictionary new.
+	featuresById := Dictionary new.
+	self features items do: [ :f | featuresById at: f id put: f ].
+	self featureReleaseAssignments do: [ :assignment |
+		| featureId releaseId featureLink releaseLink feature |
+		featureLink := assignment at: 'feature' ifAbsent: [ nil ].
+		releaseLink := assignment at: 'release' ifAbsent: [ nil ].
+		featureId := featureLink ifNotNil: [ featureLink at: 'id' ifAbsent: [ nil ] ].
+		releaseId := releaseLink ifNotNil: [ releaseLink at: 'id' ifAbsent: [ nil ] ].
+		(featureId notNil and: [ releaseId notNil ]) ifTrue: [
+			feature := featuresById at: featureId ifAbsent: [ nil ].
+			feature ifNotNil: [
+				(result at: releaseId ifAbsentPut: [ OrderedCollection new ]) add: feature ] ] ].
+	^ result
+]
+
+{ #category : 'api - roadmap' }
+PbClient >> featuresForReleaseGroup: aReleaseGroup [
+	"Given a PbReleaseGroup, collect all features from all its releases."
+	| groupReleases featuresByRelease allFeatures |
+	featuresByRelease := self featuresByReleaseId.
+	groupReleases := self releasesByGroupId at: aReleaseGroup id ifAbsent: [ #() ].
+	allFeatures := OrderedCollection new.
+	groupReleases do: [ :rel |
+		allFeatures addAll: (featuresByRelease at: rel id ifAbsent: [ #() ]) ].
+	^ allFeatures
 ]
 
 { #category : 'accessing' }
@@ -255,6 +300,38 @@ PbClient >> gtReleaseGroupsFor: aView [
 		priority: 13;
 		object: [ self releaseGroups ];
 		view: #gtViewReleaseGroupsFor:
+]
+
+{ #category : 'gt views' }
+PbClient >> gtReleaseRoadmapFor: aView [
+	<gtView>
+	^ aView columnedTree
+		title: 'Release roadmap';
+		priority: 4;
+		items: [ self releaseGroups items reject: [ :rg | rg archived = true ] ];
+		children: [ :item |
+			(item isKindOf: PbReleaseGroup)
+				ifTrue: [ self releasesByGroupId at: item id ifAbsent: [ #() ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [ self featuresByReleaseId at: item id ifAbsent: [ #() ] ]
+						ifFalse: [ #() ] ] ];
+		column: 'Name' text: [ :item | item name ] weight: 1;
+		column: 'Status' text: [ :item |
+			(item isKindOf: PbFeature)
+				ifTrue: [ item status ifNil: [ '' ] ifNotNil: [ :s | s name ifNil: [ '' ] ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [ item state ifNil: [ '' ] ]
+						ifFalse: [ '' ] ] ] weight: 0.25;
+		column: 'Owner' text: [ :item |
+			(item isKindOf: PbFeature)
+				ifTrue: [ item owner ifNil: [ '' ] ifNotNil: [ :o | o gtDisplayString ] ]
+				ifFalse: [ '' ] ] weight: 0.3;
+		column: 'Timeframe' text: [ :item |
+			| tf |
+			tf := (item respondsTo: #timeframe) ifTrue: [ item timeframe ] ifFalse: [ nil ].
+			tf ifNil: [ '' ] ifNotNil: [ tf gtDisplayString ] ] weight: 0.3
 ]
 
 { #category : 'gt views' }
@@ -428,6 +505,13 @@ PbClient >> initializeClient [
 	^ aClient
 ]
 
+{ #category : 'api' }
+PbClient >> listFeatureReleaseAssignments [
+	^ PbListFeatureReleaseAssignmentsAPIClient new
+		client: self;
+		perform
+]
+
 { #category : 'accessing' }
 PbClient >> listFeatures [
 	^ PbListFeaturesAPIClient new
@@ -533,4 +617,18 @@ PbClient >> releases [
 { #category : 'accessing' }
 PbClient >> releases: anObject [
 	releases := anObject
+]
+
+{ #category : 'api - roadmap' }
+PbClient >> releasesByGroupId [
+	"Dictionary mapping groupId -> OrderedCollection of PbRelease.
+	Built from releases that have a releaseGroupId."
+	| result |
+	result := Dictionary new.
+	self releases items do: [ :rel |
+		| groupId |
+		groupId := rel releaseGroupId.
+		groupId ifNotNil: [
+			(result at: groupId ifAbsentPut: [ OrderedCollection new ]) add: rel ] ].
+	^ result
 ]
