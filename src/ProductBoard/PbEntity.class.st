@@ -75,8 +75,7 @@ ul, ol { padding-left: 24px; }
 			webView := GtWebViewElement new.
 			webView html: styledHtml.
 			webView matchParent.
-			container := BlElement new.
-			container layout: BlLinearLayout vertical.
+			container := BrFrame new.
 			container matchParent.
 			container addChild: webView.
 			container when: BlElementRemovedFromSceneGraphEvent do: [ :e |
