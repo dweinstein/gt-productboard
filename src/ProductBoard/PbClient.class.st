@@ -222,7 +222,7 @@ PbClient >> getUrl: anAbsoluteUrl [
 	^ self checkForErrors: aClient get
 ]
 
-{ #category : 'views' }
+{ #category : 'gt - views' }
 PbClient >> gtByOwnerFor: aView [
 	<gtView>
 	^ aView columnedTree
@@ -260,16 +260,11 @@ PbClient >> gtByOwnerFor: aView [
 		send: [ :each |
 			(each isKindOf: Association)
 				ifTrue: [
-					| feats |
+					| feats group |
 					feats := each value select: [ :i | i isKindOf: PbFeature ].
-					feats size = each value size
-						ifTrue: [ PbFeaturesGroup withAll: feats ]
-						ifFalse: [
-							| objs |
-							objs := each value select: [ :i | i isKindOf: PbObjective ].
-							objs size = each value size
-								ifTrue: [ PbObjectivesGroup withAll: objs ]
-								ifFalse: [ each value ] ] ]
+					group := PbFeaturesGroup withAll: feats.
+					group client: self.
+					group ]
 				ifFalse: [ each ] ]
 ]
 

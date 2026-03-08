@@ -126,8 +126,78 @@ PbFeaturesGroup >> gtViewNowNextLaterFor: aView [
 		stencil: [ self buildNowNextLaterElement ]
 ]
 
+{ #category : 'gt - views' }
+PbFeaturesGroup >> gtViewReleaseRoadmapFor: aView [
+	<gtView>
+	| stateOrder |
+	self client ifNil: [ ^ aView empty ].
+	stateOrder := #('completed' 'in-progress' 'upcoming').
+	^ aView columnedTree
+		title: 'Release roadmap';
+		priority: 7;
+		items: [
+			| mapping releaseIds relevantReleases groupIds |
+			mapping := self releaseToFeatureIds.
+			releaseIds := mapping keys asSet.
+			relevantReleases := self client activeReleases select: [ :r | releaseIds includes: r id ].
+			groupIds := (relevantReleases collect: [ :r | r releaseGroupId ] thenSelect: #notNil) asSet.
+			self client releaseGroups items 
+				select: [ :rg | (groupIds includes: rg id) and: [ rg archived ~= true ] ] ];
+		children: [ :item |
+			(item isKindOf: PbReleaseGroup)
+				ifTrue: [
+					| mapping releases |
+					mapping := self releaseToFeatureIds.
+					releases := self client activeReleases select: [ :r | 
+						r releaseGroupId = item id and: [ mapping includesKey: r id ] ].
+					releases sorted: [ :a :b |
+						| aIdx bIdx |
+						aIdx := stateOrder indexOf: (a state ifNil: [ '' ]) ifAbsent: [ 99 ].
+						bIdx := stateOrder indexOf: (b state ifNil: [ '' ]) ifAbsent: [ 99 ].
+						aIdx = bIdx
+							ifTrue: [ 
+								(a state = 'completed')
+									ifTrue: [ a name <= b name ]
+									ifFalse: [ a name >= b name ] ]
+							ifFalse: [ aIdx < bIdx ] ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [
+							| fIds |
+							fIds := self releaseToFeatureIds at: item id ifAbsent: [ #() ].
+							self items select: [ :f | fIds includes: f id ] ]
+						ifFalse: [ #() ] ] ];
+		column: 'Name' text: [ :item | item name ] weight: 1;
+		column: 'Status' text: [ :item |
+			(item isKindOf: PbFeature)
+				ifTrue: [ item status ifNil: [ '' ] ifNotNil: [ :s | s name ifNil: [ '' ] ] ]
+				ifFalse: [
+					(item isKindOf: PbRelease)
+						ifTrue: [ item state ifNil: [ '' ] ]
+						ifFalse: [ '' ] ] ] weight: 0.25;
+		column: 'Timeframe' text: [ :item |
+			((item respondsTo: #timeframe) and: [ item timeframe notNil ])
+				ifTrue: [ item timeframe gtDisplayString ]
+				ifFalse: [ '' ] ] weight: 0.3
+]
+
 { #category : 'board' }
 PbFeaturesGroup >> pipelineOrder [
 	"Ordered status pipeline for kanban board"
 	^ #('Idea' 'Discovery' 'Candidate' 'Planned' 'Requirement Planning' 'In progress' 'Testing' 'Released' 'Launched' 'On Hold' 'Blocked' 'Archived')
+]
+
+{ #category : 'accessing' }
+PbFeaturesGroup >> releaseToFeatureIds [
+	"Dictionary mapping releaseId -> Set of feature ids in this group"
+	| featureIds result |
+	featureIds := (self items collect: #id) asSet.
+	result := Dictionary new.
+	self client featureReleaseAssignments do: [ :a |
+		| fId rId |
+		fId := a at: 'feature' ifPresent: [ :f | f at: 'id' ifAbsent: [ nil ] ] ifAbsent: [ nil ].
+		rId := a at: 'release' ifPresent: [ :r | r at: 'id' ifAbsent: [ nil ] ] ifAbsent: [ nil ].
+		(fId notNil and: [ rId notNil and: [ featureIds includes: fId ] ]) ifTrue: [
+			(result at: rId ifAbsentPut: [ Set new ]) add: fId ] ].
+	^ result
 ]
