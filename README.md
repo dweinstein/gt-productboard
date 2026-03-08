@@ -2,6 +2,10 @@
 
 A [Glamorous Toolkit](https://gtoolkit.com/) client for the [ProductBoard](https://www.productboard.com/) product management platform. Provides domain objects, API clients, strategic views, and interactive kanban boards for exploring product data.
 
+## Screenshots
+
+![Example](screenshots/example.png)
+
 ## Installation
 
 ```smalltalk
