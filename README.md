@@ -11,7 +11,7 @@ A [Glamorous Toolkit](https://gtoolkit.com/) client for the [ProductBoard](https
 ```smalltalk
 Metacello new
 	repository: 'github://dweinstein/gt-productboard/src';
-	baseline: 'Productboard';
+	baseline: 'ProductBoard';
 	load
 ```
 
