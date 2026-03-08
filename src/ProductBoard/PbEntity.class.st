@@ -55,7 +55,7 @@ PbEntity >> from: aDictionary [
 				withArguments: {aDictionary at: aPair key ifAbsent: [ nil ]} ]
 ]
 
-{ #category : 'actions' }
+{ #category : 'gt - actions' }
 PbEntity >> gtActionViewRichTextFor: anAction [
 	<gtAction>
 	(self respondsTo: #description) ifFalse: [ ^ anAction noAction ].
@@ -65,7 +65,7 @@ PbEntity >> gtActionViewRichTextFor: anAction [
 		icon: BrGlamorousVectorIcons browse;
 		tooltip: 'View rich text description';
 		action: [ :aButton | 
-			| webView styledHtml |
+			| webView styledHtml container |
 			styledHtml := '<html><head><style>
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: #333; padding: 16px; line-height: 1.6; }
 h1 { font-size: 20px; } h2 { font-size: 17px; } h3 { font-size: 15px; }
@@ -75,7 +75,13 @@ ul, ol { padding-left: 24px; }
 			webView := GtWebViewElement new.
 			webView html: styledHtml.
 			webView matchParent.
-			aButton phlow spawnObject: webView ]
+			container := BlElement new.
+			container layout: BlLinearLayout vertical.
+			container matchParent.
+			container addChild: webView.
+			container when: BlElementRemovedFromSceneGraphEvent do: [ :e |
+				webView webView privateEnsureRelease ].
+			aButton phlow spawnObject: container ]
 ]
 
 { #category : 'accessing' }
