@@ -66,10 +66,11 @@ PbObjectivesGroup >> buildTimelineCardFor: anObjective [
 	^ card
 ]
 
-{ #category : 'timeline' }
+{ #category : 'building' }
 PbObjectivesGroup >> buildTimelineElement [
-	| sorted pane grouped quarters |
-	sorted := (self items select: [ :o | o timeframe notNil and: [ o timeframe startDate notNil ] ])
+	| active sorted pane grouped quarters |
+	active := self items reject: [ :o | o archived = true ].
+	sorted := (active select: [ :o | o timeframe notNil and: [ o timeframe startDate notNil ] ])
 		sorted: [ :a :b | a timeframe startDate < b timeframe startDate ].
 	sorted ifEmpty: [ 
 		^ BrLabel new 

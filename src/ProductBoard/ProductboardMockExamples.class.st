@@ -131,7 +131,7 @@ ProductboardMockExamples >> featuresNowNextLater [
 	^ group
 ]
 
-{ #category : 'examples - client' }
+{ #category : 'examples' }
 ProductboardMockExamples >> mockClient [
 	<gtExample>
 	"A PbClient with mock data injected — no API calls needed"
@@ -139,8 +139,10 @@ ProductboardMockExamples >> mockClient [
 	client := PbClient new.
 	client features: self featuresGroup.
 	client objectives: self objectivesGroup.
+	client releases: self releasesGroup.
 	self assert: client features size equals: 4.
 	self assert: client objectives size equals: 4.
+	self assert: client releases size equals: 4.
 	^ client
 ]
 
@@ -171,17 +173,18 @@ ProductboardMockExamples >> objectiveFromDictionary [
 	^ obj
 ]
 
-{ #category : 'examples - views' }
+{ #category : 'examples' }
 ProductboardMockExamples >> objectivesByState [
 	<gtExample>
 	"Health check: objectives grouped by state"
 	| group grouped |
 	group := self objectivesGroup.
 	grouped := group items groupedBy: [ :each | each state ifNil: [ 'unset' ] ].
-	self assert: grouped keys size equals: 3.
-	self assert: (grouped at: 'on_track') size equals: 2.
+	self assert: grouped keys size equals: 4.
+	self assert: (grouped at: 'on_track') size equals: 1.
 	self assert: (grouped at: 'at_risk') size equals: 1.
 	self assert: (grouped at: 'off_track') size equals: 1.
+	self assert: (grouped at: 'unset') size equals: 1.
 	^ group
 ]
 
@@ -229,7 +232,7 @@ ProductboardMockExamples >> ownerFromDictionary [
 	^ owner
 ]
 
-{ #category : 'examples - views' }
+{ #category : 'examples' }
 ProductboardMockExamples >> ownerWorkload [
 	<gtExample>
 	"All items grouped by owner email"
@@ -241,9 +244,23 @@ ProductboardMockExamples >> ownerWorkload [
 	grouped := allItems groupedBy: [ :assoc | assoc value owner gtDisplayString ].
 	self assert: grouped keys size equals: 3.
 	self assert: (grouped at: 'alice@co.com') size equals: 4.
-	self assert: (grouped at: 'bob@co.com') size equals: 2.
-	self assert: (grouped at: 'carol@co.com') size equals: 2.
+	self assert: (grouped at: 'bob@co.com') size equals: 3.
+	self assert: (grouped at: 'carol@co.com') size equals: 1.
 	^ grouped
+]
+
+{ #category : 'examples' }
+ProductboardMockExamples >> quarterlyRadar [
+	<gtExample>
+	"Stakeholder view: what launched this quarter, what is in progress, what is coming"
+	| client radar |
+	client := self mockClient.
+	radar := client quarterlyReleaseRadar.
+	self assert: radar keys size equals: 3.
+	self assert: (radar at: 'Launched This Quarter') size equals: 1.
+	self assert: (radar at: 'In Progress') size equals: 1.
+	self assert: (radar at: 'Coming Soon') size equals: 2.
+	^ client
 ]
 
 { #category : 'examples - views' }
@@ -260,26 +277,151 @@ ProductboardMockExamples >> recentlyChanged [
 	^ recent
 ]
 
+{ #category : 'examples - releases' }
+ProductboardMockExamples >> releaseFromDictionary [
+	<gtExample>
+	| dict obj |
+	dict := Dictionary new
+		at: 'id' put: 'rel-1';
+		at: 'name' put: 'Platform v2.0';
+		at: 'description' put: '<p>Major platform upgrade</p>';
+		at: 'archived' put: false;
+		at: 'releaseGroup' put: (Dictionary new at: 'id' put: 'rg-1'; yourself);
+		at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2025-01-01'; at: 'endDate' put: '2025-03-31'; at: 'granularity' put: 'quarter'; yourself);
+		at: 'state' put: 'completed';
+		at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/releases/rel-1'; yourself);
+		yourself.
+	obj := PbRelease from: dict.
+	self assert: obj name equals: 'Platform v2.0'.
+	self assert: obj id equals: 'rel-1'.
+	self assert: obj state equals: 'completed'.
+	self assert: obj archived equals: false.
+	self assert: obj timeframe class equals: PbTimeframe.
+	self assert: obj timeframe startDate equals: (Date fromString: '2025-01-01').
+	self assert: obj timeframe endDate equals: (Date fromString: '2025-03-31').
+	self assert: obj releaseGroupId equals: 'rg-1'.
+	self assert: obj status class equals: PbStatus.
+	self assert: obj status name equals: 'completed'.
+	self assert: obj type equals: 'release'.
+	self assert: obj owner isNil.
+	self assert: obj descriptionText trim equals: 'Major platform upgrade'.
+	^ obj
+]
+
+{ #category : 'examples - releases' }
+ProductboardMockExamples >> releaseGroupFromDictionary [
+	<gtExample>
+	| dict obj |
+	dict := Dictionary new
+		at: 'id' put: 'rg-1';
+		at: 'name' put: 'Q1 2025 Releases';
+		at: 'description' put: '<p>All releases planned for Q1 2025</p>';
+		at: 'archived' put: false;
+		at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-1'; yourself);
+		yourself.
+	obj := PbReleaseGroup from: dict.
+	self assert: obj name equals: 'Q1 2025 Releases'.
+	self assert: obj id equals: 'rg-1'.
+	self assert: obj archived equals: false.
+	self assert: obj descriptionText trim equals: 'All releases planned for Q1 2025'.
+	^ obj
+]
+
+{ #category : 'examples - releases' }
+ProductboardMockExamples >> releaseGroupsGroup [
+	<gtExample>
+	| response group |
+	response := Dictionary new at: 'data' put: self sampleReleaseGroupData; yourself.
+	group := PbReleaseGroupsGroup from: response.
+	self assert: group size equals: 2.
+	self assert: group first class equals: PbReleaseGroup.
+	self assert: group first name equals: 'Q1 2025 Releases'.
+	self assert: (group items second) name equals: 'Q2 2025 Releases'.
+	^ group
+]
+
+{ #category : 'examples - releases' }
+ProductboardMockExamples >> releasesByState [
+	<gtExample>
+	"Releases grouped by state"
+	| group grouped |
+	group := self releasesGroup.
+	grouped := group items groupedBy: [ :each | each state ifNil: [ 'unset' ] ].
+	self assert: grouped keys size equals: 3.
+	self assert: (grouped at: 'completed') size equals: 1.
+	self assert: (grouped at: 'in-progress') size equals: 1.
+	self assert: (grouped at: 'upcoming') size equals: 2.
+	^ group
+]
+
+{ #category : 'examples - releases' }
+ProductboardMockExamples >> releasesGroup [
+	<gtExample>
+	| response group |
+	response := Dictionary new at: 'data' put: self sampleReleaseData; yourself.
+	group := PbReleasesGroup from: response.
+	self assert: group size equals: 4.
+	self assert: group first class equals: PbRelease.
+	self assert: group first timeframe class equals: PbTimeframe.
+	^ group
+]
+
 { #category : 'fixtures' }
 ProductboardMockExamples >> sampleFeatureData [
-	"Raw feature dictionaries for building test groups"
+	"Raw feature dictionaries — shapes match real API responses"
 	^ {
 		Dictionary new at: 'id' put: 'f1'; at: 'name' put: 'Dark Mode';
-			at: 'status' put: (Dictionary new at: 'name' put: 'Planned'; yourself);
+			at: 'type' put: 'feature';
+			at: 'description' put: '<p>Add dark mode theme support across all pages</p>';
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-1'; at: 'name' put: 'Planned'; yourself);
 			at: 'owner' put: (Dictionary new at: 'email' put: 'alice@co.com'; yourself);
-			at: 'createdAt' put: '2025-03-01T00:00:00Z'; yourself.
+			at: 'parent' put: nil;
+			at: 'archived' put: false;
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: 'none'; at: 'endDate' put: 'none'; at: 'granularity' put: 'none'; yourself);
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/features/f1'; at: 'html' put: 'https://app.productboard.com/features/f1'; yourself);
+			at: 'createdAt' put: '2025-03-01T00:00:00Z';
+			at: 'updatedAt' put: '2025-03-10T00:00:00Z';
+			at: 'lastHealthUpdate' put: nil;
+			yourself.
 		Dictionary new at: 'id' put: 'f2'; at: 'name' put: 'Search';
-			at: 'status' put: (Dictionary new at: 'name' put: 'In Progress'; yourself);
+			at: 'type' put: 'feature';
+			at: 'description' put: '<p>Full-text search across all entities</p>';
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-2'; at: 'name' put: 'In Progress'; yourself);
 			at: 'owner' put: (Dictionary new at: 'email' put: 'bob@co.com'; yourself);
-			at: 'createdAt' put: '2025-03-15T00:00:00Z'; yourself.
+			at: 'parent' put: nil;
+			at: 'archived' put: false;
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: 'none'; at: 'endDate' put: 'none'; at: 'granularity' put: 'none'; yourself);
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/features/f2'; at: 'html' put: 'https://app.productboard.com/features/f2'; yourself);
+			at: 'createdAt' put: '2025-03-15T00:00:00Z';
+			at: 'updatedAt' put: '2025-04-01T00:00:00Z';
+			at: 'lastHealthUpdate' put: nil;
+			yourself.
 		Dictionary new at: 'id' put: 'f3'; at: 'name' put: 'Export CSV';
-			at: 'status' put: (Dictionary new at: 'name' put: 'Planned'; yourself);
+			at: 'type' put: 'feature';
+			at: 'description' put: '';
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-1'; at: 'name' put: 'Planned'; yourself);
 			at: 'owner' put: (Dictionary new at: 'email' put: 'alice@co.com'; yourself);
-			at: 'createdAt' put: '2025-04-01T00:00:00Z'; yourself.
+			at: 'parent' put: nil;
+			at: 'archived' put: false;
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: 'none'; at: 'endDate' put: 'none'; at: 'granularity' put: 'none'; yourself);
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/features/f3'; at: 'html' put: 'https://app.productboard.com/features/f3'; yourself);
+			at: 'createdAt' put: '2025-04-01T00:00:00Z';
+			at: 'updatedAt' put: '2025-04-05T00:00:00Z';
+			at: 'lastHealthUpdate' put: nil;
+			yourself.
 		Dictionary new at: 'id' put: 'f4'; at: 'name' put: 'Notifications';
-			at: 'status' put: (Dictionary new at: 'name' put: 'Done'; yourself);
+			at: 'type' put: 'feature';
+			at: 'description' put: '<p>Push and email notification system</p>';
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-3'; at: 'name' put: 'Done'; yourself);
 			at: 'owner' put: (Dictionary new at: 'email' put: 'carol@co.com'; yourself);
-			at: 'createdAt' put: '2025-02-01T00:00:00Z'; yourself
+			at: 'parent' put: nil;
+			at: 'archived' put: false;
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: 'none'; at: 'endDate' put: 'none'; at: 'granularity' put: 'none'; yourself);
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/features/f4'; at: 'html' put: 'https://app.productboard.com/features/f4'; yourself);
+			at: 'createdAt' put: '2025-02-01T00:00:00Z';
+			at: 'updatedAt' put: '2025-02-15T00:00:00Z';
+			at: 'lastHealthUpdate' put: nil;
+			yourself
 	}
 ]
 
@@ -361,40 +503,128 @@ ProductboardMockExamples >> sampleFeaturesWithTimeframes [
 
 { #category : 'fixtures' }
 ProductboardMockExamples >> sampleObjectiveData [
-	"Raw objective dictionaries for building test groups"
+	"Raw objective dictionaries — shapes match real API responses (includes level, parent, status.id)"
 	^ {
 		Dictionary new at: 'id' put: 'o1'; at: 'name' put: 'Improve Retention';
 			at: 'state' put: 'on_track';
+			at: 'level' put: nil;
+			at: 'parent' put: nil;
 			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2025-04-01'; at: 'endDate' put: '2025-06-30'; at: 'granularity' put: 'quarter'; yourself);
 			at: 'archived' put: false;
 			at: 'owner' put: (Dictionary new at: 'email' put: 'alice@co.com'; yourself);
-			at: 'status' put: (Dictionary new at: 'name' put: 'Active'; yourself);
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-1'; at: 'name' put: 'Active'; yourself);
+			at: 'description' put: '<p>Increase 30-day retention by 15%</p>';
 			at: 'createdAt' put: '2025-01-01T00:00:00Z';
-			at: 'updatedAt' put: DateAndTime now printString; yourself.
+			at: 'updatedAt' put: DateAndTime now printString;
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/objectives/o1'; yourself);
+			yourself.
 		Dictionary new at: 'id' put: 'o2'; at: 'name' put: 'Expand Market';
 			at: 'state' put: 'at_risk';
+			at: 'level' put: nil;
+			at: 'parent' put: nil;
 			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2025-04-01'; at: 'endDate' put: '2025-06-30'; at: 'granularity' put: 'quarter'; yourself);
 			at: 'archived' put: false;
 			at: 'owner' put: (Dictionary new at: 'email' put: 'bob@co.com'; yourself);
-			at: 'status' put: (Dictionary new at: 'name' put: 'Active'; yourself);
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-1'; at: 'name' put: 'Active'; yourself);
+			at: 'description' put: '<p>Enter two new geographic markets</p>';
 			at: 'createdAt' put: '2025-01-15T00:00:00Z';
-			at: 'updatedAt' put: '2025-01-20T00:00:00Z'; yourself.
+			at: 'updatedAt' put: '2025-01-20T00:00:00Z';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/objectives/o2'; yourself);
+			yourself.
 		Dictionary new at: 'id' put: 'o3'; at: 'name' put: 'Reduce Churn';
 			at: 'state' put: 'off_track';
+			at: 'level' put: nil;
+			at: 'parent' put: nil;
 			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2025-07-01'; at: 'endDate' put: '2025-09-30'; at: 'granularity' put: 'quarter'; yourself);
 			at: 'archived' put: false;
 			at: 'owner' put: (Dictionary new at: 'email' put: 'alice@co.com'; yourself);
-			at: 'status' put: (Dictionary new at: 'name' put: 'Active'; yourself);
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-1'; at: 'name' put: 'Active'; yourself);
+			at: 'description' put: '';
 			at: 'createdAt' put: '2025-02-01T00:00:00Z';
-			at: 'updatedAt' put: '2024-11-01T00:00:00Z'; yourself.
+			at: 'updatedAt' put: '2024-11-01T00:00:00Z';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/objectives/o3'; yourself);
+			yourself.
 		Dictionary new at: 'id' put: 'o4'; at: 'name' put: 'Scale Platform';
-			at: 'state' put: 'on_track';
+			at: 'state' put: nil;
+			at: 'level' put: nil;
+			at: 'parent' put: nil;
 			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2025-07-01'; at: 'endDate' put: '2025-09-30'; at: 'granularity' put: 'quarter'; yourself);
-			at: 'archived' put: false;
-			at: 'owner' put: (Dictionary new at: 'email' put: 'carol@co.com'; yourself);
-			at: 'status' put: (Dictionary new at: 'name' put: 'Active'; yourself);
+			at: 'archived' put: true;
+			at: 'owner' put: (Dictionary new at: 'email' put: 'bob@co.com'; yourself);
+			at: 'status' put: (Dictionary new at: 'id' put: 'st-2'; at: 'name' put: 'Upcoming'; yourself);
+			at: 'description' put: '<p>Infrastructure scaling initiative</p>';
 			at: 'createdAt' put: '2025-03-01T00:00:00Z';
-			at: 'updatedAt' put: '2025-06-01T00:00:00Z'; yourself
+			at: 'updatedAt' put: '2025-03-15T00:00:00Z';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/objectives/o4'; yourself);
+			yourself.
+	}
+]
+
+{ #category : 'fixtures' }
+ProductboardMockExamples >> sampleReleaseData [
+	"Raw release dictionaries — 4 releases across all 3 states. Shapes match real API responses."
+	^ {
+		Dictionary new
+			at: 'id' put: 'rel-1';
+			at: 'name' put: 'Platform v2.0';
+			at: 'description' put: '<p>Major platform upgrade with <b>new architecture</b></p>';
+			at: 'archived' put: false;
+			at: 'releaseGroup' put: (Dictionary new at: 'id' put: 'rg-1'; at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-1'; yourself); yourself);
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2026-01-01'; at: 'endDate' put: '2026-02-28'; at: 'granularity' put: 'none'; yourself);
+			at: 'state' put: 'completed';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/releases/rel-1'; yourself);
+			yourself.
+		Dictionary new
+			at: 'id' put: 'rel-2';
+			at: 'name' put: 'Mobile App Launch';
+			at: 'description' put: '<p>Initial mobile app release</p>';
+			at: 'archived' put: false;
+			at: 'releaseGroup' put: (Dictionary new at: 'id' put: 'rg-1'; at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-1'; yourself); yourself);
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2026-02-01'; at: 'endDate' put: '2026-03-15'; at: 'granularity' put: 'none'; yourself);
+			at: 'state' put: 'in-progress';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/releases/rel-2'; yourself);
+			yourself.
+		Dictionary new
+			at: 'id' put: 'rel-3';
+			at: 'name' put: 'Analytics Dashboard';
+			at: 'description' put: '';
+			at: 'archived' put: false;
+			at: 'releaseGroup' put: (Dictionary new at: 'id' put: 'rg-2'; at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-2'; yourself); yourself);
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: 'none'; at: 'endDate' put: 'none'; at: 'granularity' put: 'none'; yourself);
+			at: 'state' put: 'upcoming';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/releases/rel-3'; yourself);
+			yourself.
+		Dictionary new
+			at: 'id' put: 'rel-4';
+			at: 'name' put: 'API v3';
+			at: 'description' put: '<p>Next generation API with GraphQL support</p>';
+			at: 'archived' put: false;
+			at: 'releaseGroup' put: (Dictionary new at: 'id' put: 'rg-2'; at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-2'; yourself); yourself);
+			at: 'timeframe' put: (Dictionary new at: 'startDate' put: '2026-07-01'; at: 'endDate' put: '2026-09-30'; at: 'granularity' put: 'none'; yourself);
+			at: 'state' put: 'upcoming';
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/releases/rel-4'; yourself);
+			yourself.
+	}
+]
+
+{ #category : 'sample data' }
+ProductboardMockExamples >> sampleReleaseGroupData [
+	"Raw release group dictionaries for building test groups"
+	^ {
+		Dictionary new
+			at: 'id' put: 'rg-1';
+			at: 'name' put: 'Q1 2025 Releases';
+			at: 'description' put: '<p>All releases planned for Q1 2025</p>';
+			at: 'archived' put: false;
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-1'; yourself);
+			yourself.
+		Dictionary new
+			at: 'id' put: 'rg-2';
+			at: 'name' put: 'Q2 2025 Releases';
+			at: 'description' put: '<p>All releases planned for Q2 2025</p>';
+			at: 'archived' put: false;
+			at: 'links' put: (Dictionary new at: 'self' put: 'https://api.productboard.com/release-groups/rg-2'; yourself);
+			yourself
 	}
 ]
 

@@ -19,7 +19,7 @@ PbCardElement class >> for: anEntity [
 	^ self new entity: anEntity; compact: false; build
 ]
 
-{ #category : 'accessing' }
+{ #category : 'building' }
 PbCardElement >> accentColor [
 	"Derive an accent color from the entity's status or state"
 	| s |
@@ -41,6 +41,7 @@ PbCardElement >> accentColor [
 	s = 'Requirement Planning' ifTrue: [ ^ Color fromHexString: 'e67e22' ].
 	s = 'In progress' ifTrue: [ ^ Color fromHexString: 'f39c12' ].
 	s = 'In Progress' ifTrue: [ ^ Color fromHexString: 'f39c12' ].
+	s = 'in-progress' ifTrue: [ ^ Color fromHexString: 'f39c12' ].
 	s = 'Testing' ifTrue: [ ^ Color fromHexString: '1abc9c' ].
 	s = 'Released' ifTrue: [ ^ Color fromHexString: '27ae60' ].
 	s = 'Launched' ifTrue: [ ^ Color fromHexString: '2ecc71' ].
@@ -48,6 +49,8 @@ PbCardElement >> accentColor [
 	s = 'Blocked' ifTrue: [ ^ Color fromHexString: 'e74c3c' ].
 	s = 'Archived' ifTrue: [ ^ Color fromHexString: 'bdc3c7' ].
 	s = 'Upcoming' ifTrue: [ ^ Color fromHexString: '3498db' ].
+	s = 'upcoming' ifTrue: [ ^ Color fromHexString: '3498db' ].
+	s = 'completed' ifTrue: [ ^ Color fromHexString: '27ae60' ].
 	s = 'Done' ifTrue: [ ^ Color fromHexString: '27ae60' ].
 	"State colors for objectives"
 	s = 'on_track' ifTrue: [ ^ Color fromHexString: '27ae60' ].

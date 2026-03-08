@@ -5,7 +5,9 @@ Class {
 		'baseUrl',
 		'apiKey',
 		'features',
-		'objectives'
+		'objectives',
+		'releases',
+		'releaseGroups'
 	],
 	#classVars : [
 		'ApiKeyFile'
@@ -67,6 +69,30 @@ PbClient >> baseUrl [
 { #category : 'accessing' }
 PbClient >> baseUrl: anObject [
 	baseUrl := anObject asZnUrl
+]
+
+{ #category : 'building' }
+PbClient >> buildQuarterlyRadarElement [
+	| radar allItems launchedSet inProgressSet |
+	radar := self quarterlyReleaseRadar.
+	allItems := OrderedCollection new.
+	radar valuesDo: [ :v | allItems addAll: v ].
+	allItems ifEmpty: [ ^ BrLabel new text: 'No releases found'; aptitude: BrGlamorousLabelAptitude new ].
+	
+	launchedSet := radar at: 'Launched This Quarter'.
+	inProgressSet := radar at: 'In Progress'.
+	
+	^ PbBoardElement
+		items: allItems
+		bucketBy: [ :item |
+			(launchedSet includes: item)
+				ifTrue: [ 'Launched This Quarter' ]
+				ifFalse: [
+					(inProgressSet includes: item)
+						ifTrue: [ 'In Progress' ]
+						ifFalse: [ 'Coming Soon' ] ] ]
+		order: #('Launched This Quarter' 'In Progress' 'Coming Soon')
+		groupClass: PbReleasesGroup
 ]
 
 { #category : 'private' }
@@ -210,6 +236,35 @@ PbClient >> gtObjectivesTimelineFor: aView [
 		priority: 10;
 		object: [ self objectives ];
 		view: #gtViewTimelineFor:
+]
+
+{ #category : 'views' }
+PbClient >> gtQuarterlyRadarFor: aView [
+	<gtView>
+	^ aView explicit
+		title: 'Release radar';
+		priority: 3;
+		stencil: [ self buildQuarterlyRadarElement ]
+]
+
+{ #category : 'gt views' }
+PbClient >> gtReleaseGroupsFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Release Groups';
+		priority: 13;
+		object: [ self releaseGroups ];
+		view: #gtViewReleaseGroupsFor:
+]
+
+{ #category : 'gt views' }
+PbClient >> gtReleasesFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Releases';
+		priority: 12;
+		object: [ self releases ];
+		view: #gtViewReleasesFor:
 ]
 
 { #category : 'as yet unclassified' }
@@ -387,6 +442,20 @@ PbClient >> listObjectives [
 		perform
 ]
 
+{ #category : 'api' }
+PbClient >> listReleaseGroups [
+	^ PbListReleaseGroupsAPIClient new
+		client: self;
+		perform
+]
+
+{ #category : 'api' }
+PbClient >> listReleases [
+	^ PbListReleasesAPIClient new
+		client: self;
+		perform
+]
+
 { #category : 'accessing' }
 PbClient >> objectives [
 	^ objectives ifNil: [ objectives := self listObjectives ]
@@ -417,4 +486,51 @@ PbClient >> postFile: aString withEntity: anEntity [
 	aClient entity: anEntity.
 
 	^ self checkForErrors: aClient post
+]
+
+{ #category : 'accessing' }
+PbClient >> quarterlyReleaseRadar [
+	"Returns a dictionary of release buckets for stakeholder reporting:
+	 - Launched This Quarter: completed releases with endDate in current quarter
+	 - In Progress: currently in-progress releases
+	 - Coming Soon: upcoming releases"
+	| today quarterStart quarterEnd launched inProgress comingSoon all |
+	today := Date today.
+	quarterStart := Date year: today year month: ((today monthIndex - 1) // 3 * 3 + 1) day: 1.
+	quarterEnd := (Date year: today year month: ((today monthIndex - 1) // 3 * 3 + 3) day: 1) daysInMonth.
+	quarterEnd := Date year: today year month: ((today monthIndex - 1) // 3 * 3 + 3) day: quarterEnd.
+	
+	all := self releases items.
+	
+	launched := all select: [ :r |
+		r state = 'completed' and: [
+			r timeframe notNil and: [
+				r timeframe endDate notNil and: [
+					(r timeframe endDate >= quarterStart) and: [ r timeframe endDate <= quarterEnd ] ] ] ] ].
+	
+	inProgress := all select: [ :r | r state = 'in-progress' ].
+	
+	comingSoon := all select: [ :r | r state = 'upcoming' ].
+	
+	^ { 'Launched This Quarter' -> launched . 'In Progress' -> inProgress . 'Coming Soon' -> comingSoon } asOrderedDictionary
+]
+
+{ #category : 'accessing' }
+PbClient >> releaseGroups [
+	^ releaseGroups ifNil: [ releaseGroups := self listReleaseGroups ]
+]
+
+{ #category : 'accessing' }
+PbClient >> releaseGroups: anObject [
+	releaseGroups := anObject
+]
+
+{ #category : 'accessing' }
+PbClient >> releases [
+	^ releases ifNil: [ releases := self listReleases ]
+]
+
+{ #category : 'accessing' }
+PbClient >> releases: anObject [
+	releases := anObject
 ]
