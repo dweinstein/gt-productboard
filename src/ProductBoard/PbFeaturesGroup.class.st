@@ -35,6 +35,41 @@ PbFeaturesGroup >> gtViewBoardFor: aView [
 		stencil: [ self buildBoardElement ]
 ]
 
+{ #category : 'views' }
+PbFeaturesGroup >> gtViewByOwnerFor: aView [
+	<gtView>
+	^ aView columnedTree
+		title: 'By owner';
+		priority: 5;
+		items: [
+			| grouped result |
+			grouped := self items groupedBy: [ :f | f owner ifNil: [ 'Unassigned' ] ifNotNil: [ :o | o gtDisplayString ] ].
+			result := OrderedCollection new.
+			grouped keysAndValuesDo: [ :ownerName :items |
+				result add: (ownerName -> items) ].
+			result sorted: [ :a :b | a value size > b value size ] ];
+		children: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ each value ]
+				ifFalse: [ #() ] ];
+		column: 'Name' text: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ each key, ' (', each value size asString, ')' ]
+				ifFalse: [ each name ] ];
+		column: 'Status' text: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ '' ]
+				ifFalse: [ each status ifNil: [ '' ] ifNotNil: [ :s | s name ifNil: [ '' ] ] ] ] weight: 0.25;
+		column: 'Timeframe' text: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ '' ]
+				ifFalse: [ each timeframe ifNil: [ '' ] ifNotNil: [ :t | t gtDisplayString ] ] ] weight: 0.3;
+		send: [ :each |
+			(each isKindOf: Association)
+				ifTrue: [ PbFeaturesGroup withAll: each value ]
+				ifFalse: [ each ] ]
+]
+
 { #category : 'gt-extensions' }
 PbFeaturesGroup >> gtViewByStatusFor: aView [
 	<gtView>

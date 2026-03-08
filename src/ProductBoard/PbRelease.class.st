@@ -91,6 +91,43 @@ PbRelease >> detailItems [
 	^ items
 ]
 
+{ #category : 'accessing' }
+PbRelease >> featuresGroup [
+	"Wrap assigned features in a PbFeaturesGroup for view reuse"
+	self client ifNil: [ ^ PbFeaturesGroup new ].
+	^ PbFeaturesGroup withAll: self assignedFeatures
+]
+
+{ #category : 'views' }
+PbRelease >> gtBoardFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Board';
+		priority: 5;
+		object: [ self featuresGroup ];
+		view: #gtViewBoardFor:
+]
+
+{ #category : 'views' }
+PbRelease >> gtByOwnerFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'By owner';
+		priority: 3;
+		object: [ self featuresGroup ];
+		view: #gtViewByOwnerFor:
+]
+
+{ #category : 'views' }
+PbRelease >> gtByStatusFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'By status';
+		priority: 4;
+		object: [ self featuresGroup ];
+		view: #gtViewByStatusFor:
+]
+
 { #category : 'gt views' }
 PbRelease >> gtCardFor: aView [
 	<gtView>
@@ -115,15 +152,24 @@ PbRelease >> gtDisplayOn: stream [
 	stream nextPutAll: (name ifNil: [ 'Unnamed release' ])
 ]
 
-{ #category : 'gt views' }
+{ #category : 'views' }
 PbRelease >> gtFeaturesFor: aView [
 	<gtView>
-	self client ifNil: [ ^ aView empty ].
 	^ aView forward
 		title: 'Features';
-		priority: 15;
-		object: [ PbFeaturesGroup withAll: self assignedFeatures ];
+		priority: 2;
+		object: [ self featuresGroup ];
 		view: #gtViewFeaturesFor:
+]
+
+{ #category : 'views' }
+PbRelease >> gtNowNextLaterFor: aView [
+	<gtView>
+	^ aView forward
+		title: 'Now / Next / Later';
+		priority: 6;
+		object: [ self featuresGroup ];
+		view: #gtViewNowNextLaterFor:
 ]
 
 { #category : 'gt views' }
