@@ -222,7 +222,7 @@ PbClient >> getUrl: anAbsoluteUrl [
 	^ self checkForErrors: aClient get
 ]
 
-{ #category : 'gt - views' }
+{ #category : 'gt-views' }
 PbClient >> gtByOwnerFor: aView [
 	<gtView>
 	^ aView columnedTree
@@ -262,7 +262,7 @@ PbClient >> gtByOwnerFor: aView [
 				ifTrue: [
 					| feats group |
 					feats := each value select: [ :i | i isKindOf: PbFeature ].
-					group := PbFeaturesGroup withAll: feats.
+					group := PbFeaturesGroup withAll: feats label: each key.
 					group client: self.
 					group ]
 				ifFalse: [ each ] ]

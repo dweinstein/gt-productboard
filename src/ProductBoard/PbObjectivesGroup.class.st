@@ -120,7 +120,7 @@ PbObjectivesGroup >> gtViewBoardFor: aView [
 		stencil: [ self buildBoardElement ]
 ]
 
-{ #category : 'views' }
+{ #category : 'gt-views' }
 PbObjectivesGroup >> gtViewByOwnerFor: aView [
 	<gtView>
 	^ aView columnedTree
@@ -151,7 +151,7 @@ PbObjectivesGroup >> gtViewByOwnerFor: aView [
 				ifFalse: [ each timeframe ifNil: [ '' ] ifNotNil: [ :t | t gtDisplayString ] ] ] weight: 0.3;
 		send: [ :each |
 			(each isKindOf: Association)
-				ifTrue: [ PbObjectivesGroup withAll: each value ]
+				ifTrue: [ PbObjectivesGroup withAll: each value label: each key ]
 				ifFalse: [ each ] ]
 ]
 

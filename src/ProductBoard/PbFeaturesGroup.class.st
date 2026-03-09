@@ -55,7 +55,7 @@ PbFeaturesGroup >> gtViewBoardFor: aView [
 		stencil: [ self buildBoardElement ]
 ]
 
-{ #category : 'views' }
+{ #category : 'gt-views' }
 PbFeaturesGroup >> gtViewByOwnerFor: aView [
 	<gtView>
 	^ aView columnedTree
@@ -86,11 +86,11 @@ PbFeaturesGroup >> gtViewByOwnerFor: aView [
 				ifFalse: [ each timeframe ifNil: [ '' ] ifNotNil: [ :t | t gtDisplayString ] ] ] weight: 0.3;
 		send: [ :each |
 			(each isKindOf: Association)
-				ifTrue: [ PbFeaturesGroup withAll: each value ]
+				ifTrue: [ PbFeaturesGroup withAll: each value label: each key ]
 				ifFalse: [ each ] ]
 ]
 
-{ #category : 'views' }
+{ #category : 'gt-views' }
 PbFeaturesGroup >> gtViewByStatusFor: aView [
 	<gtView>
 	^ aView columnedTree
@@ -117,7 +117,7 @@ PbFeaturesGroup >> gtViewByStatusFor: aView [
 				ifFalse: [ each owner ifNil: [ '' ] ifNotNil: [ :o | o gtDisplayString ] ] ] weight: 0.3;
 		send: [ :each |
 			(each isKindOf: Association)
-				ifTrue: [ PbFeaturesGroup withAll: each value ]
+				ifTrue: [ PbFeaturesGroup withAll: each value label: each key ]
 				ifFalse: [ each ] ]
 ]
 
