@@ -4,7 +4,6 @@ Class {
 	#instVars : [
 		'id',
 		'name',
-		'description',
 		'archived',
 		'links'
 	],
@@ -47,16 +46,6 @@ PbReleaseGroup >> assignedReleases [
 	theClient := self client.
 	theClient ifNil: [ ^ #() ].
 	^ theClient releasesByGroupId at: self id ifAbsent: [ #() ]
-]
-
-{ #category : 'accessing' }
-PbReleaseGroup >> description [
-	^ description
-]
-
-{ #category : 'accessing' }
-PbReleaseGroup >> description: anObject [
-	description := anObject
 ]
 
 { #category : 'accessing' }

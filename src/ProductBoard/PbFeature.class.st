@@ -2,7 +2,6 @@ Class {
 	#name : 'PbFeature',
 	#superclass : 'PbEntity',
 	#instVars : [
-		'description',
 		'createdAt',
 		'updatedAt',
 		'name',
@@ -60,16 +59,6 @@ PbFeature >> createdAt [
 { #category : 'accessing' }
 PbFeature >> createdAt: aValue [
 	createdAt := self deserializeTime: aValue
-]
-
-{ #category : 'accessing' }
-PbFeature >> description [
-	^ description
-]
-
-{ #category : 'accessing' }
-PbFeature >> description: anObject [
-	description := anObject
 ]
 
 { #category : 'accessing' }

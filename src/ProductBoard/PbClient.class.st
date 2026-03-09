@@ -396,26 +396,26 @@ PbClient >> gtReleasesFor: aView [
 		view: #gtViewReleasesFor:
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'gt-search' }
 PbClient >> gtSpotterForFeature: aSearch [
 	<gtSearch>
 	^ aSearch list
 		title: 'Features';
 		priority: 9;
-		items: [ self listFeatures ];
+		items: [ self features items ];
 		itemsLimit: Float infinity;
 		itemName: #name;
 		sendCategory: [ :aCategory :aStep :thisSearch | PbFeaturesGroup withAll: aCategory items contents ];
 		filterBySubstring
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'gt-search' }
 PbClient >> gtSpotterForObjective: aSearch [
 	<gtSearch>
 	^ aSearch list
 		title: 'Objectives';
 		priority: 9;
-		items: [ self listObjectives ];
+		items: [ self objectives items ];
 		itemsLimit: Float infinity;
 		itemName: #name;
 		sendCategory: [ :aCategory :aStep :thisSearch | PbObjectivesGroup withAll: aCategory items contents ];

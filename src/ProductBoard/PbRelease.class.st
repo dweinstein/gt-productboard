@@ -4,7 +4,6 @@ Class {
 	#instVars : [
 		'id',
 		'name',
-		'description',
 		'archived',
 		'releaseGroup',
 		'timeframe',
@@ -49,16 +48,6 @@ PbRelease >> assignedFeatures [
 { #category : 'ui' }
 PbRelease >> buildCardElement [
 	^ PbCardElement for: self
-]
-
-{ #category : 'accessing' }
-PbRelease >> description [
-	^ description
-]
-
-{ #category : 'accessing' }
-PbRelease >> description: anObject [
-	description := anObject
 ]
 
 { #category : 'accessing' }
